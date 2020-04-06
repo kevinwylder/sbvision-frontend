@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 function writeApiURL(url) {
   fs.writeFileSync("./src/api/url.ts", `
@@ -7,6 +8,9 @@ export const API_URL = "${url}";
 }
 
 function writeIndexHTML(mode) {
+  if (!fs.existsSync("./dist")) {
+    fs.mkdirSync('./dist');
+  }
   fs.copyFileSync(`./node_modules/react/umd/react.${mode}.js`, `./dist/react.${mode}.js`);
   fs.copyFileSync(`./node_modules/react-dom/umd/react-dom.${mode}.js`, `./dist/react-dom.${mode}.js`);
   fs.writeFileSync("./dist/index.html", `
@@ -57,6 +61,7 @@ module.exports = env => {
         }
       ],
     },
+    devtool: 'inline-source-map',
     resolve: {
       extensions: [ '.ts', '.js', '.tsx' ],
     },
@@ -64,6 +69,9 @@ module.exports = env => {
     externals: {
       "react": "React",
       "react-dom": "ReactDOM"
+    },
+    devServer: {
+      contentBase: path.join(__dirname, 'dist'),
     }
   };
 };
