@@ -12,7 +12,7 @@ This is the web application code to contribute to the skateboard vision project.
 
 ### backend dev environment
 
-If you're testing a change that effects the backend as well 
+`yarn local` starts webpack in watch mode just like the dev environment, but points the api at `http://localhost:1080` for testing with [sbvision's docker-compose setup](https://github.com/kevinwylder/sbvision)
 
 ### production build
 
