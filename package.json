@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "build": "webpack",
-    "dev": "webpack-dev-server --env.dev"
+    "dev": "webpack-dev-server --env.dev",
+    "local": "webpack-dev-server --env.dev --env.url=http://localhost:1080"
   },
   "author": "",
   "license": "ISC",

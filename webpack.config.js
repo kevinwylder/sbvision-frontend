@@ -32,12 +32,16 @@ function writeIndexHTML(mode) {
 
 module.exports = env => {
 
-  let isDev = env && env.dev;
-  if (isDev) {
-    writeApiURL(`http://localhost:1080`);
-    writeIndexHTML("development");
+  if (env && env.url) {
+    writeApiURL(env.url);
   } else {
     writeApiURL(`https://sbvision.kwylder.com`);
+  }
+
+  let isDev = env && env.dev;
+  if (isDev) {
+    writeIndexHTML("development");
+  } else {
     writeIndexHTML("production.min");
   }
 
