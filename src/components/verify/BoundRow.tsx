@@ -3,6 +3,7 @@ import * as React from 'react';
 import { Bound } from '../../api';
 import { renderSkateboard } from '../../renderer';
 import { Quaternion } from '../../math';
+import { API_URL } from '../../api/url';
 
 interface boundListProps {
     bounds: Bound[]
@@ -34,7 +35,7 @@ function BoundRow(props: boundRowProps) {
         <h4 style={{
             color: props.selected ? "#0F0" : "#000",
         }}> Bound {props.bound.id} </h4>
-        <img src={`/api/image?bound=${props.bound.id}`} />
+        <img src={`${API_URL}/api/image?bound=${props.bound.id}`} />
         <RotationList rotations={props.bound.rotations.map(({r, i, j, k}) => [ r, i, j, k ])}/>
     </div>
 }

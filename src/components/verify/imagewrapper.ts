@@ -1,6 +1,7 @@
 import { getFrames, Frame, addRotation } from "../../api";
 import { renderSkateboard } from "../../renderer";
 import { Quaternion, rotateSkateboard, tiltSkateboard } from '../../math';
+import { API_URL } from "../../api/url";
 
 export interface ImageWrapperFrameStatus {
     frame: Frame|undefined
@@ -117,7 +118,7 @@ export class ImageWrapper {
             this.draw();
         } else {
             this.frame = this.frames[this.idx];
-            this.image.src = `/api/image?frame=${this.frame.id}`;
+            this.image.src = `${API_URL}/api/image?frame=${this.frame.id}`;
         }
         this.selectedBound = 0;
         // pick the first rotationless

@@ -3,6 +3,7 @@ import { Box } from "./boxmanager";
 import { FrameList } from "./framesearch";
 import { PlayButton } from "./playbutton";
 import { renderSkateboard } from "../../renderer";
+import { API_URL } from "../../api/url";
 
 export class VideoWrapper {
 
@@ -25,6 +26,7 @@ export class VideoWrapper {
         this.video.controls = true;
         this.video.setAttribute("playsinline", "");
         this.video.loop = true;
+        this.video.crossOrigin = "Anonymus";
         document.body.appendChild(this.video);
 
         this.video.onplay = () => {
@@ -64,7 +66,7 @@ export class VideoWrapper {
         getVideoById(videoID)
         .then(videoInfo => {
             var source = document.createElement('source');
-            source.src = `/app/video/stream?id=${videoInfo.id}`;
+            source.src = `${API_URL}/app/video/stream?id=${videoInfo.id}`;
             source.type = videoInfo.format;
             this.video.appendChild(source);
             this.video.load();
