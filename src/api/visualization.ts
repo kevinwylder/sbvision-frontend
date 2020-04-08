@@ -7,7 +7,7 @@ export class VisualizationManager {
 
     constructor(onImage: (elem: HTMLImageElement, rot: Quaternion) => void) {
         let [ protocol, domain ] = API_URL.split("://");
-        this.ws = new WebSocket(`ws${protocol == "https:" ? "s" : ""}://${domain}/app/visualization`);
+        this.ws = new WebSocket(`ws${protocol == "https" ? "s" : ""}://${domain}/app/visualization`);
         this.ws.onmessage = (ev: MessageEvent) => {
             let img = new Image();
             let { s, r } = JSON.parse(ev.data)
