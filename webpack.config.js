@@ -35,7 +35,7 @@ module.exports = env => {
   if (env && env.url) {
     writeApiURL(env.url);
   } else {
-    writeApiURL(`https://sbvision.kwylder.com`);
+    writeApiURL(`https://api.skateboarvision.net`);
   }
 
   let isDev = env && env.dev;
