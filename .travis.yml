@@ -1,0 +1,18 @@
+language: node_js
+node_js:
+- 8
+if: branch = master
+install:
+- yarn
+script:
+- yarn build
+after_success:
+- pip install --user awscli
+- export PATH=$PATH:$HOME/.local/bin
+- aws s3 sync ./dist s3://$domain
+- aws cloudfront create-invalidation --distribution-id E37VGOJSB08WSG --paths "/*"
+
+env:
+  global:
+  - secure: D9FP0vLajAtoMFaGgs2/rHGSqzwsy9uu9iYsknJMqbBAaHspnigjhOi5A1mZGoLtjW/VJbdtnAhV/f5DryxRLNt2/f8LT/MBrY9h5Uh6TCXBbYuBuHE2aiJf4oQX4tzzZOnXcIeW+CG3+B9K2jGXNapoqLjWW/FJz5eJcBNhaIKCYNILQ/E9krhPoCMtQ3Y/WFN84U/19jhcC+5AUarHs2jprOIgAo3RFc2sPETl2KoRtwDdvapDBvOhQKlmdkYyFfLynpZmPPjGU+bTwHAaGBtWpqI+jbr99+P1gaPjY5tsqYmKYhIoox8S9RmK+FeyWXN2qQ3zmkGRuH4cfqUo/97WBb0dz5U9gRfWQvItkm07JmjX8KkZhMnX/x0dB4k06G3AlRwtC7G3vkVswt/xOMg+cFrcZnmY+I0luGsy6CEkzrpRLc/Y3UT5ZRccpxMQBE8opB/J/xJ9xRZIhgoY8RjkeLIAT/eMw2dVIyCuXZJDzHwGz2/WTezZ9plEjGjKACyh3+yYWjOKHePriZ9fYfOULNGyitqger3wtjv/PCX6nGiBESOAYJxW7hLrNbsqNptE5Pv+x9SN6E1LJ2t6j5GTb1JbBILNySympSF+CxFFV9EhHUNogFUgWnEob9yJ5X8JakDSzi0xn4+FlJyUl5j92DUIta9soVPCJVDreI8=
+  - secure: sr8uK9qwVQnnHDcL3adTJaeQ19VxMmRRu32Y+ezahcOJoQe5RzJX7bNU6cEue6x3IhSyM/DzhZtj7euf7qplHkxLbuNUuGmrhNpkcRT0DkoeBEUtMj80IMf0f9lUMHLZmht0PBne1o1d7X+i4jlhLpxrklL3YbQtd+eV4BwXm9mLBqfDSN0AvDnDjlIzczZgnbCWY/P8X4JzKDa6AMKBT2pcl78S6as8868jICY2aHqztGH5pDEZIY2rGx/Txs0nN0GVK9mPtEql7iLr1VvpNObzBZfscpQV7U0vOheqByegWjkqyGoTvungoo6h/GFqwvVjROGyFHbOrINMw891MnLysBmVHzsstISZ5oeZxdAGpbgOkKzO5x6yY7Arn0t1f1G98c5fqpZ3ipNM6buMRBVC6SnVdijhVfM0eCKTChx4Hb6A+mK2PCof5cyI9vBGj2fv6bsGvZ3kVPuP0+OCtWHaOeFFt/PpJhH+3LieV5qP6FKt/RppHIf5BmEkJ1SLVx6ZSCELBjNWCd8LGkJe6H1bUvAa6VUl7iGsPF3X/BcDJXmei7ZsV52t9E3eUEJClqNOYMRlFwbgTxOQqoEKMlk8gCc+NPS+WB6QYcwuQJkP4cQrcHFRiynmI3hpFFay0MqnzZ8j2JVE/0UifRFkiCPA9+OCaO5w9TE1OOvgqXU=
