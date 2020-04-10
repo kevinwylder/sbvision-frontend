@@ -20,6 +20,10 @@ a {
     font-size: 1.2rem;
 }
 
+.nav-bar-tab-last {
+    margin-left: auto;
+}
+
 .nav-bar-tab canvas {
     height: 50px;
 }

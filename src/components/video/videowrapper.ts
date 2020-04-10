@@ -1,4 +1,4 @@
-import { getFrames, getVideoById, addBounds, uploadFrame } from "../../api";
+import { getFrames, getVideoById } from "../../api";
 import { Box } from "./boxmanager";
 import { FrameList } from "./framesearch";
 import { PlayButton } from "./playbutton";
@@ -49,11 +49,6 @@ export class VideoWrapper {
 
         this.video.ontimeupdate = () => {
             if (this.video.paused) {
-                uploadFrame(this.videoID, this.video)
-                .then(frame => {
-                    this.frames?.addFrame(frame);
-                })
-                .catch(err => console.log(err));
                 this.render();
             }
         }
@@ -64,9 +59,9 @@ export class VideoWrapper {
         })
 
         getVideoById(videoID)
-        .then(videoInfo => {
+        .then(([videoInfo, streamURL]) => {
             var source = document.createElement('source');
-            source.src = `${API_URL}/app/video/stream?id=${videoInfo.id}`;
+            source.src = streamURL;
             source.type = videoInfo.format;
             this.video.appendChild(source);
             this.video.load();
@@ -94,9 +89,9 @@ export class VideoWrapper {
             return;
         }
 
-        let [ wasTap, wasInsideBox, wasEmptyBox ] = this.box.release();
+        let [ wasTap ] = this.box.release();
 
-        if (wasTap && wasEmptyBox) {
+        if (wasTap) {
             if (this.video.paused) {
                 this.video.play();
             } else {
@@ -105,35 +100,6 @@ export class VideoWrapper {
             return;
         }
 
-        if (!this.video.paused) {
-            this.box.reset();
-            return;
-        }
-
-        if (!wasTap) {
-            if (this.ctx) {
-                this.box.drawHelpDelayed(this.ctx);
-            }
-            return;
-        } 
-
-        if (wasInsideBox) {
-            let frame = this.frames?.getFrame(this.video.currentTime * 1000);
-            if (frame && this.box) {
-                addBounds(frame.id, this.box.bounds())
-                .then(() => { 
-                    this.forward();
-                })
-                .catch(err => {
-                    console.log(err);
-                    this.video.play();
-                });
-                return;
-            }
-        }
-        console.log("Click outside box");
-        this.box.reset();
-        this.video.play();
     }
 
     public forward() {

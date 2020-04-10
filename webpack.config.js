@@ -22,9 +22,9 @@ function writeIndexHTML(mode) {
 <body>
 
   <div id="root"/>
-  <script type="text/javascript" src="./react.${mode}.js"></script>
-  <script type="text/javascript" src="./react-dom.${mode}.js"></script>
-  <script type="text/javascript" src="./main.js"></script>
+  <script type="text/javascript" src="/react.${mode}.js"></script>
+  <script type="text/javascript" src="/react-dom.${mode}.js"></script>
+  <script type="text/javascript" src="/main.js"></script>
 
 </body>
   `)
@@ -35,7 +35,7 @@ module.exports = env => {
   if (env && env.url) {
     writeApiURL(env.url);
   } else {
-    writeApiURL(`https://api.skateboarvision.net`);
+    writeApiURL(`https://api.skateboardvision.net`);
   }
 
   let isDev = env && env.dev;
@@ -76,6 +76,9 @@ module.exports = env => {
     },
     devServer: {
       contentBase: path.join(__dirname, 'dist'),
+      historyApiFallback: {
+        index: 'index.html'
+      }
     }
   };
 };

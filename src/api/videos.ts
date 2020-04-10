@@ -8,6 +8,7 @@ export interface Video {
     duration: number
     src: string
     clips: number
+    thumbnail: string
 }
 
 interface GetVideosResponse {
@@ -16,7 +17,7 @@ interface GetVideosResponse {
 }
 
 export function getVideos(offset: number, limit: number): Promise<GetVideosResponse> {
-    return fetch(`${API_URL}/app/video/list?offset=${offset}&count=${limit}`)
+    return fetch(`${API_URL}/video/list?offset=${offset}&count=${limit}`)
     .then(res => {
         if (res.status != 200) {
             return res.text()
@@ -24,11 +25,16 @@ export function getVideos(offset: number, limit: number): Promise<GetVideosRespo
         } 
         return res.json()
     })
-    .then(({videos, total}) => videos ? {videos, total} : {videos: [], total: 0});
+    .then(({videos, total}) => {
+        videos.forEach((v: Video) => {
+            v.thumbnail = `${API_URL}/video/thumbnail?id=${v.id}`;
+        });
+        return videos ? {videos, total} : {videos: [], total: 0}
+    });
 }
 
-export function getVideoById(id: number) : Promise<Video> {
-    return fetch(`${API_URL}/app/video/list?id=${id}`)
+export function getVideoById(id: number) : Promise<[Video, string]> {
+    return fetch(`${API_URL}/video/list?id=${id}`)
     .then(res => res.json())
-    .then(({videos}) => videos[0]);
+    .then(({videos}) => [videos[0], `${API_URL}/video/stream?id=${videos[0].id}`]);
 }

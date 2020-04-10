@@ -37,7 +37,7 @@ export function toQuat({r, i, j, k}: Rotation): Quaternion {
 }
 
 export function getFrames(videoId: number): Promise<Frame[]> {
-    return fetch(`${API_URL}/api/frames?video=${videoId}`)
+    return fetch(`${API_URL}/frames?video=${videoId}`)
     .then(res => res.json())
     .then(({frames}) => frames);
 }

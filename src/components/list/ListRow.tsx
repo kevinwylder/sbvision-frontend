@@ -3,7 +3,6 @@ import * as React from 'react';
 import { Video } from '../../api';
 
 import { Redirect } from 'react-router-dom';
-import { API_URL } from '../../api/url';
 
 interface VideoRowProps {
     video: Video
@@ -24,7 +23,7 @@ export function ListRow({video}: VideoRowProps) {
     return (
         <div className="list-row" onClick={() => setSelected(true)}>
             <img className="list-row-image"
-                src={`${API_URL}/app/video/thumbnail?id=${video.id}`} />
+                src={video.thumbnail} />
             <div className="list-row-text">
                 <h3 className="list-row-title" style={{
                     color: selected ? "red" : "black"

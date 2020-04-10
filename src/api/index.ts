@@ -1,4 +1,4 @@
 export { Video, getVideos, getVideoById } from './videos'
-export { addBounds, uploadFrame, addRotation } from './contribute';
 export { getFrames, Frame, Bound, toRot, toQuat } from './frame';
 export { VisualizationManager } from './visualization';
+export { UserInfo, ensureToken, getUserInfo, setUsername, logout } from './user';
