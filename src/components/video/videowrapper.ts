@@ -1,16 +1,12 @@
-import { getFrames, getVideoById } from "../../api";
 import { Box } from "./boxmanager";
-import { FrameList } from "./framesearch";
 import { PlayButton } from "./playbutton";
 import { renderSkateboard } from "../../renderer";
-import { API_URL } from "../../api/url";
 
 export class VideoWrapper {
 
     private video: HTMLVideoElement;
 
     private ctx: CanvasRenderingContext2D|undefined;
-    private frames: FrameList|undefined;
     private box: Box|undefined;
     private playbutton: PlayButton|undefined;
 
@@ -53,20 +49,6 @@ export class VideoWrapper {
             }
         }
 
-        getFrames(videoID)
-        .then(frames => {
-            this.frames = new FrameList(frames);
-        })
-
-        getVideoById(videoID)
-        .then(([videoInfo, streamURL]) => {
-            var source = document.createElement('source');
-            source.src = streamURL;
-            source.type = videoInfo.format;
-            this.video.appendChild(source);
-            this.video.load();
-            this.render();
-        })
     }
 
     public mobileClick() {
@@ -136,20 +118,8 @@ export class VideoWrapper {
     }
 
     private drawAnnotations() {
-        if (!this.ctx || !this.frames) {
+        if (!this.ctx) {
             return;
-        }
-        let annotation = this.frames.getFrame(this.video.currentTime * 1000);
-        for (let i = 0; annotation?.bounds && i < annotation.bounds.length; i++) {
-            let bound = annotation.bounds[i];
-            if (bound.rotations?.length) {
-                let { r, i, j, k } = bound.rotations[0];
-                renderSkateboard(this.ctx, [r, i, j, k], [bound.x, bound.y, bound.x + bound.width, bound.y + bound.height]);
-            } else {
-                this.ctx.lineWidth = 4;
-                this.ctx.strokeStyle = "#FF0000";
-                this.ctx.strokeRect(bound.x, bound.y, bound.width, bound.height);
-            }
         }
     }
 

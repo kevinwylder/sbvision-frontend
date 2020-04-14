@@ -1,0 +1,33 @@
+
+.dashboard-container button {
+    border-radius: 10px;
+    margin: 7px;
+}
+
+.dashboard-container input {
+    border-radius: 10px;
+    margin: 7px;
+    padding: 3px;
+    width: 270px;
+}
+
+.dashboard-container {
+    max-width: 800px;
+    margin: auto;
+    padding: 10px;
+}
+
+.add-video {
+    max-width: 400px;
+    margin: auto;
+    display: flex;
+    flex-direction: row;
+}
+
+.add-video div {
+    text-align: center;
+    vertical-align: middle;
+    height: 40px;
+    line-height: 40px;
+    font-size: larger;
+}
