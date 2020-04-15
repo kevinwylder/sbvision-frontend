@@ -23,9 +23,10 @@ export function UserDashboard() {
     React.useEffect(() => {
         getVideos()
         .then(videos => {
-            setVideos(videos.map(({title, thumbnail, duration, type}) => ({
+            setVideos(videos.map(({title, src, thumbnail, duration, type}) => ({
                 thumbnail,
                 title,
+                link: src,
                 textCenter: duration,
                 textRight: (type == 1) ? "youtube" : "/r/skateboarding",
             })));

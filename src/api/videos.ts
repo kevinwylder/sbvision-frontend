@@ -68,14 +68,14 @@ export function getVideoStatus(onMessage: (status: VideoStatus, isOpen: boolean)
     }
 }
 
-export function uploadVideo(url: string): Promise<VideoStatus> { 
+export function uploadVideo(data: FormData): Promise<VideoStatus> { 
     return getToken()
     .then(token => fetch(`${API_URL}/video/upload`, {
         method: "POST",
         headers: {
             "Identity": token,
         },
-        body: JSON.stringify({url}),
+        body: data,
     }))
     .then(async res => {
         if (res.status != 200) {

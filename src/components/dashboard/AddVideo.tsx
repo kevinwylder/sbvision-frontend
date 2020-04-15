@@ -52,25 +52,50 @@ interface uploadProps {
 function UploadVideo({ setRequestID }: uploadProps) {
     let [ isPending, setIsPending ] = React.useState(false);
     let [ error, setError ] = React.useState("");
-    let ref = React.createRef<HTMLInputElement>();
+    let url = React.createRef<HTMLInputElement>();
+    let file = React.createRef<HTMLInputElement>();
+    let title = React.createRef<HTMLInputElement>();
+
+    let onSubmit = () => {
+        if (!url.current || !file.current || !title.current) return
+        setIsPending(true);
+
+        let form = new FormData();
+
+        if (url.current.value != "") {
+            form.append('url', url.current.value);
+        } else if (title.current.value && file.current.files) {
+            form.append('video', file.current.files[0])
+            form.append('title', title.current.value)
+        }
+
+        uploadVideo(form)
+        .then(({id}) => setRequestID(id))
+        .catch(err => {
+            setIsPending(false);
+            setError(err + "");
+        })
+    }
 
     return <div>
         <h3> Add a new Video in one of these formats</h3>
         <ul>
             <li>Youtube link: <pre>https://youtu.be/...</pre> or <pre>https://www.youtube.com/watch?...</pre></li>
-            <li>Reddit link: <pre>https://www.reddit.com/r/skateboarding/comments/...</pre></li>
+            <li>Reddit comments link from <a href="https://www.reddit.com/r/skateboarding">/r/skateboarding</a> <pre>https://www.reddit.com/r/skateboarding/comments/...</pre></li>
         </ul>
         <div className="add-video">
-            <input type="url" ref={ref} placeholder={"Youtube link or /r/skateboarding comments url"} />
-            <button disabled={isPending} onClick={() => {
-                if (!ref.current) return
-                setIsPending(true);
-                uploadVideo(ref.current.value)
-                .then(({id}) => setRequestID(id))
-                .catch(err => {
-                    setError(err + "");
-                })
-            }}> Add </button>
+            <input type="url" ref={url} placeholder={"Youtube link or /r/skateboarding comments url"} />
+            <button disabled={isPending} onClick={ onSubmit }> Add </button>
+        </div>
+        <ul>
+            <li>Directly upload a video file </li>
+        </ul>
+        <div className="add-video">
+            <div style={{display: "flex", flexDirection: "column"}}>
+                <input type="text" ref={title} placeholder={"The title of your post"} />
+                <input type="file" ref={file} accept="video/*" />
+            </div>
+            <button disabled={isPending} onClick={onSubmit}> Upload </button>
         </div>
         <span style={{color: "red"}} > {error} </span>
     </div>
