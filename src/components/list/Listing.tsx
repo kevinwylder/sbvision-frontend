@@ -2,12 +2,10 @@ import * as React from 'react';
 
 import './list.css';
 
-import { Redirect } from 'react-router-dom';
-
 export interface ListElement {
     thumbnail: string
     title: string
-    link?: string
+    onClick?: () => void
     textLeft?: string
     textCenter?: string
     textRight?: string
@@ -26,31 +24,25 @@ export function Listing({videos, pageSize}: ListingData) {
     return (
     <div className="listing">
         {videos.map((v, i) => 
-            <ListRow key={i} {...v} />
+            (offset <= i && i < offset + PAGE_SIZE) ? <ListRow key={i - offset} {...v} /> : <></>
         )}
         <ListPagenation
             pageSize={PAGE_SIZE}
             maxTotal={videos.length}
             start={offset}
-            end={offset + videos.length}
+            end={offset + PAGE_SIZE}
             onPageSelected={setOffset}
         />
     </div>)
 }
 
 export function ListRow(video: ListElement) {
-    let [ selected, setSelected ] = React.useState(false);
-    if (selected && video.link) {
-        return <Redirect push to={video.link}/>
-    }
     return (
-        <div className="list-row" onClick={() => video.link && setSelected(true)}>
+        <div className="list-row" onClick={video.onClick}>
             <img className="list-row-image"
                 src={video.thumbnail} />
             <div className="list-row-text">
-                <h3 className="list-row-title" style={{
-                    color: selected ? "red" : "black"
-                }}> {video.title} </h3>
+                <h3 className="list-row-title" > {video.title} </h3>
                 <div className="list-row-stats">
                     <div> { video.textLeft || "" } </div> 
                     <div> { video.textCenter || "" } </div>

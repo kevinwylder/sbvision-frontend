@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const ip = require('ip');
 
 function writeApiURL(url) {
   fs.writeFileSync("./src/api/url.ts", `
@@ -32,23 +33,32 @@ function writeIndexHTML(mode) {
 
 module.exports = env => {
 
-  if (env && env.url) {
-    writeApiURL(env.url);
+  let url;
+  let reactVersion;
+  let mode;
+  let watch;
+  if (!env) {
+    url = `https://api.skateboardvision.net`;
+    reactVersion = `production.min`;
+    mode = `production`;
+    watch = false;
   } else {
-    writeApiURL(`https://api.skateboardvision.net`);
+    if (env.dev) {
+      url = "https://api.skateboardvision.net";
+    } else {
+      url = "http://" + ip.address() + ":1080";
+    }
+    reactVersion = "development";
+    mode = "development";
+    watch = true;
   }
 
-  let isDev = env && env.dev;
-  if (isDev) {
-    writeIndexHTML("development");
-  } else {
-    writeIndexHTML("production.min");
-  }
-
+  writeApiURL(url);
+  writeIndexHTML(reactVersion);
 
   return {
-    mode: (isDev) ? "development" : "production",
-    watch: isDev,
+    mode,
+    watch,
     module: {
       rules: [
         {
@@ -72,10 +82,11 @@ module.exports = env => {
     entry: "./src/index.tsx",
     externals: {
       "react": "React",
-      "react-dom": "ReactDOM"
+      "react-dom": "ReactDOM",
     },
     devServer: {
       contentBase: path.join(__dirname, 'dist'),
+      host: "0.0.0.0",
       historyApiFallback: {
         index: 'index.html'
       }

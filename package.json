@@ -6,13 +6,15 @@
   "scripts": {
     "build": "webpack",
     "dev": "webpack-dev-server --env.dev",
-    "local": "webpack-dev-server --env.dev --env.url=http://localhost:1080"
+    "local": "webpack-dev-server --env.local",
+    "remote": "webpack-dev-server --env.remote"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/react": "^16.9.17",
+    "@types/react": "^16.9.34",
     "@types/react-dom": "^16.9.4",
+    "@types/react-router-dom": "^5.1.3",
     "css-loader": "^3.4.2",
     "express": "^4.17.1",
     "style-loader": "^1.1.3",
@@ -25,7 +27,6 @@
     "webpack-dev-server": "^3.10.3"
   },
   "dependencies": {
-    "@types/react-router-dom": "^5.1.3",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-router-dom": "^5.1.2"

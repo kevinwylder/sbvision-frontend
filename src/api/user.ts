@@ -29,7 +29,12 @@ export function getUserInfo(): Promise<UserInfo> {
             Identity: token,
         }
     }))
-    .then(res => res.json())
+    .then(res => {
+        if (res.status == 401) {
+            login();
+        }
+        return res.json()
+    })
     .then((info: UserInfo) => {
         userInfo = info;
         return userInfo;

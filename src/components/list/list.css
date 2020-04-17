@@ -33,6 +33,8 @@
     width: 90px;
     height: 90px;
     object-fit: contain;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
 }
 
 .list-row-text{

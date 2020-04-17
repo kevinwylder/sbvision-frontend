@@ -39,19 +39,21 @@ export function AddVideo({onVideoAdded}: addProps) {
         return <ShowVideoStatus {...status} />
     }
 
-    return <UploadVideo setRequestID={id => {
+    return <UploadVideo setStatus={status => {
+        setStatus(status);
         setFinishedRequest(false);
     }} />
 }
 
 
 interface uploadProps {
-    setRequestID: (id: string) => void
-    //setStatus: (status: VideoStatus) => void
+    //setRequestID: (id: string) => void
+    setStatus: (status: VideoStatus) => void
 }
-function UploadVideo({ setRequestID }: uploadProps) {
-    let [ isPending, setIsPending ] = React.useState(false);
+function UploadVideo({ setStatus }: uploadProps) {
     let [ error, setError ] = React.useState("");
+    let [ isPending, setIsPending ] = React.useState(false);
+    let [ uploadProgress, setUploadProgress ] = React.useState<number>();
     let url = React.createRef<HTMLInputElement>();
     let file = React.createRef<HTMLInputElement>();
     let title = React.createRef<HTMLInputElement>();
@@ -59,6 +61,7 @@ function UploadVideo({ setRequestID }: uploadProps) {
     let onSubmit = () => {
         if (!url.current || !file.current || !title.current) return
         setIsPending(true);
+        setError("")
 
         let form = new FormData();
 
@@ -69,8 +72,8 @@ function UploadVideo({ setRequestID }: uploadProps) {
             form.append('title', title.current.value)
         }
 
-        uploadVideo(form)
-        .then(({id}) => setRequestID(id))
+        uploadVideo(form, setUploadProgress)
+        .then(setStatus)
         .catch(err => {
             setIsPending(false);
             setError(err + "");
@@ -80,11 +83,11 @@ function UploadVideo({ setRequestID }: uploadProps) {
     return <div>
         <h3> Add a new Video in one of these formats</h3>
         <ul>
-            <li>Youtube link: <pre>https://youtu.be/...</pre> or <pre>https://www.youtube.com/watch?...</pre></li>
-            <li>Reddit comments link from <a href="https://www.reddit.com/r/skateboarding">/r/skateboarding</a> <pre>https://www.reddit.com/r/skateboarding/comments/...</pre></li>
+            <li>Youtube link: <pre>youtu.be/...</pre> or <pre>https://www.youtube.com/watch?...</pre></li>
+            <li>Reddit comments link from <a href="https://www.reddit.com/r/skateboarding">/r/skateboarding</a> <pre style={{overflow: "scroll"}}>https://www.reddit.com/r/skateboarding/comments/...</pre></li>
         </ul>
         <div className="add-video">
-            <input type="url" ref={url} placeholder={"Youtube link or /r/skateboarding comments url"} />
+            <input disabled={isPending} type="url" ref={url} placeholder={"Youtube link or /r/skateboarding comments url"} />
             <button disabled={isPending} onClick={ onSubmit }> Add </button>
         </div>
         <ul>
@@ -92,17 +95,22 @@ function UploadVideo({ setRequestID }: uploadProps) {
         </ul>
         <div className="add-video">
             <div style={{display: "flex", flexDirection: "column"}}>
-                <input type="text" ref={title} placeholder={"The title of your post"} />
-                <input type="file" ref={file} accept="video/*" />
+                <input disabled={isPending} type="text" ref={title} placeholder={"The title of your post"} />
+                <input disabled={isPending} type="file" ref={file} accept="video/*" />
             </div>
             <button disabled={isPending} onClick={onSubmit}> Upload </button>
         </div>
+        { uploadProgress && 
+        <div className="add-video-upload-progress">
+            <div> Upload Progress - </div>
+            <progress value={uploadProgress * 100} max={100}> { Math.floor(uploadProgress * 100) } % </progress>
+        </div>}
         <span style={{color: "red"}} > {error} </span>
     </div>
 }
 
 function ShowVideoStatus({info, id, complete, status, success}: VideoStatus) {
-    if (info) {
+    if (info?.id) {
         return <div className="listing"> 
             <ListRow textCenter={status} title={info.title} thumbnail={info.thumbnail} />
         </div>

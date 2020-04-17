@@ -4,47 +4,58 @@ import { UserInfo, getUserInfo } from '../../api';
 import "./dashboard.css"
 import { AddVideo } from './AddVideo';
 import { ListElement, Listing } from '../list/Listing';
-import { login } from '../../api/auth';
-import { getVideos } from '../../api/videos';
+import { getVideos, Video } from '../../api/videos';
+import { Redirect } from 'react-router-dom';
+import { ClipCreator } from './ClipCreator';
 
 export function UserDashboard() {
 
+    let [ loginErr, setLoginErr ] = React.useState<string>();
     let [ info, setUserInfo ] = React.useState<UserInfo>();
     React.useEffect(() => {
         getUserInfo()
         .then(setUserInfo)
         .catch(err => {
-            console.log(err);
-            login();
+            setLoginErr(err + "");
         });
     }, [])
 
+    let [ selectedVideo, setSelectedVideo ] = React.useState<Video>()
     let [ videos, setVideos ] = React.useState<ListElement[]>([]);
     React.useEffect(() => {
         getVideos()
         .then(videos => {
-            setVideos(videos.map(({title, src, thumbnail, duration, type}) => ({
-                thumbnail,
-                title,
-                link: src,
-                textCenter: duration,
-                textRight: (type == 1) ? "youtube" : "/r/skateboarding",
+            setVideos(videos.map((video) => ({
+                thumbnail: video.thumbnail,
+                title: video.title,
+                onClick: () => { setSelectedVideo(video) },
+                textLeft: video.uploaded_by,
+                textCenter: video.duration,
+                textRight: video.from,
             })));
         })
     }, []);
 
+    if (loginErr) {
+        return <Redirect to="/" />
+    }
+
     if (!info) {
         return <div> Loading... </div>
+    }
+
+    if (selectedVideo) {
+        return <ClipCreator exit={() => setSelectedVideo(undefined)} video={selectedVideo} />
     }
 
     return <>
         <div className="dashboard-container">
             <h1> Hello, {info.username}</h1>
             <AddVideo onVideoAdded={(video) => {
-                setVideos([video, ...videos]);
+                setSelectedVideo(video);
             }}/>
             <h1> Your Videos </h1>
-            <Listing videos={videos} />
+            <Listing videos={videos} pageSize={8}/>
         </div>
     </>
 }
