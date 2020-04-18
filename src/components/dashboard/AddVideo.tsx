@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { uploadVideo, VideoStatus, getVideoStatus, Video } from '../../api/videos';
+import { uploadVideo, VideoStatus, streamVideoStatus, Video } from '../../api/videos';
 import { ListRow } from '../list/Listing';
 
 interface addProps{
@@ -7,25 +7,22 @@ interface addProps{
 }
 export function AddVideo({onVideoAdded}: addProps) {
     let [ status, setStatus ] = React.useState<VideoStatus>();
-    let [ finishedRequest, setFinishedRequest ] = React.useState(false);
+    let [ closeStream, setCloseStream ] = React.useState<() => void>();
 
     React.useEffect(() => {
-        if (finishedRequest) {
-            return;
-        }
-        return getVideoStatus((status, isOpen) => {
-            if (isOpen) {
-                setStatus(status);
-            } else {
-                setFinishedRequest(true);
-            }
-        })
-    }, [finishedRequest])
+        console.log("Salt");
+        const c = closeStream;
+        if (c) return () => c();
+    }, [closeStream])
+
+    React.useEffect(() => {
+        console.log("Yeah");
+        setCloseStream(streamVideoStatus(setStatus));
+    }, [])
 
     React.useEffect(() => {
         if (status?.complete) {
             let timeout = setTimeout(() => {
-                setFinishedRequest(true);
                 setStatus(undefined);
                 if (onVideoAdded && status?.info) {
                     onVideoAdded(status.info);
@@ -40,8 +37,9 @@ export function AddVideo({onVideoAdded}: addProps) {
     }
 
     return <UploadVideo setStatus={status => {
+        console.log("Uh")
         setStatus(status);
-        setFinishedRequest(false);
+        setCloseStream(streamVideoStatus( setStatus ));
     }} />
 }
 

@@ -75,7 +75,7 @@ export function getVideos(): Promise<Video[]> {
     })
 }
 
-export function getVideoStatus(onMessage: (status: VideoStatus, isOpen: boolean) => void) {
+export function streamVideoStatus(onMessage: (status: VideoStatus) => void) {
     let [ protocol, domain ] = API_URL.split("://");
     let ws: WebSocket;
     getToken()
@@ -84,13 +84,13 @@ export function getVideoStatus(onMessage: (status: VideoStatus, isOpen: boolean)
         ws.onmessage = (status) => {
             let data: VideoStatus = JSON.parse(status.data);
             data.info = data.info ? transformVideo(data.info as unknown as apiVideo) : null;
-            onMessage(data, true);
+            onMessage(data);
             if (data.complete) {
                 ws.close();
             }
         };
-        ws.onerror = () => {
-            onMessage({ id: "", status: "Error connecting to socket", complete: true, success: false, info: null}, false);
+        ws.onerror = (err) => {
+            console.log(err);
         }
     })
     return () => {
