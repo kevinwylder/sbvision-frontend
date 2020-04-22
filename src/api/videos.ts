@@ -38,9 +38,9 @@ function transformVideo(video: apiVideo): Video {
         ...video,
         format: "video/mp4",
         from: typeLookup[video.type],
-        src: `${API_URL}/video/${video.id}/video.mp4`,
-        hls: `${API_URL}/video/${video.id}/playlist.m3u8`,
-        thumbnail: `${API_URL}/thumbnail/${video.id}.jpg`,
+        src: `/video/${video.id}/video.mp4`,
+        hls: `/video/${video.id}/playlist.m3u8`,
+        thumbnail: `/thumbnail/${video.id}.jpg`,
     }
 }
 
@@ -50,12 +50,6 @@ export interface VideoStatus {
     status: string
     complete: boolean
     success: boolean
-}
-
-export function getVideo(id: number): Promise<Video> {
-    return fetch(`${API_URL}/video/info?id=${id}`)
-    .then(res => res.json())
-    .then(transformVideo);
 }
 
 export function getVideos(): Promise<Video[]> {
