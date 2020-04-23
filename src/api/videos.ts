@@ -1,4 +1,4 @@
-import { API_URL } from "./url";
+import { API_URL } from "../constants";
 import { getToken } from "./auth";
 
 export interface Video {

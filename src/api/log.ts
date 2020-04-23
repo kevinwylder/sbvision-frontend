@@ -1,11 +1,13 @@
-import { API_URL } from "./url";
+import { LOG_URL } from "../constants";
 
-export function logImportantError(err: string) {
-    fetch(`${API_URL}/test`, {
-        method: "POST",
-        body: err,
-        headers: {
-            testname: "error.txt"
-        }
-    });
+export function httpLog(err: string) {
+    if (!LOG_URL) {
+        console.log(err)
+        return;
+    } else {
+        fetch(`${LOG_URL}/log`, {
+            method: "POST",
+            body: err,
+        });
+    }
 }

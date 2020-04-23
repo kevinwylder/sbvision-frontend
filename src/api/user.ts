@@ -1,5 +1,5 @@
 import { getToken, login, clearToken } from './auth';
-import { API_URL } from './url';
+import { API_URL } from '../constants';
 
 export interface UserInfo {
     email: string

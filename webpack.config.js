@@ -1,10 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const ip = require('ip');
+const bodyParser = require('body-parser');
 
-function writeApiURL(url) {
-  fs.writeFileSync("./src/api/url.ts", `
+function writeConstants(url, logURL, defaultToken) {
+  fs.writeFileSync("./src/constants.ts", `
 export const API_URL = "${url}";
+export const LOG_URL = ${ logURL ? `"${logURL}"` : "undefined" };
+export const DEFAULT_TOKEN = ${ defaultToken ? `"${defaultToken}"` : "undefined" };
   `);
 }
 
@@ -36,27 +39,27 @@ function writeIndexHTML(mode) {
 
 module.exports = env => {
 
-  let url;
+  let url = `https://api.skateboardvision.net`;
   let reactVersion;
   let mode;
   let watch;
-  if (!env) {
-    url = `https://api.skateboardvision.net`;
+  let defaultToken;
+  let logURL;
+  if (!env || env.production) {
     reactVersion = `production.min`;
     mode = `production`;
     watch = false;
   } else {
-    if (env.dev) {
-      url = "https://api.skateboardvision.net";
-    } else {
-      url = "http://" + ip.address() + ":1080";
-    }
     reactVersion = "development";
     mode = "development";
     watch = true;
+    if (env.token) {
+      defaultToken = env.token;
+      logURL = "http://" + ip.address() + ":8080";
+    }
   }
 
-  writeApiURL(url);
+  writeConstants(url, logURL, defaultToken);
   writeIndexHTML(reactVersion);
 
   return {
@@ -89,8 +92,15 @@ module.exports = env => {
       "react-router-dom": "ReactRouterDOM"
     },
     devServer: {
+      before: function(app, server, compiler) {
+        app.use(bodyParser.text());
+        app.post("/log", function(req, res) {
+          console.log("\t/log " + req.body);
+          res.status(200).send();
+        })
+      },
       contentBase: path.join(__dirname, 'dist'),
-      host: "0.0.0.0",
+      host: (logURL) ? "0.0.0.0" : undefined,
       historyApiFallback: {
         index: 'index.html'
       }

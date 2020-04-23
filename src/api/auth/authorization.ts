@@ -1,6 +1,7 @@
 import { AUTH_URL, APP_CLIENT_ID } from ".";
+import { DEFAULT_TOKEN } from '../../constants';
 
-let token: string|undefined;
+let token: string|undefined = DEFAULT_TOKEN;
 
 export function getToken(): Promise<string> {
     if (token) {

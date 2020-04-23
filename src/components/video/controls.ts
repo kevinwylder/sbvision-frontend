@@ -1,4 +1,5 @@
 import { Video } from "../../api";
+import { httpLog } from "../../api/log";
 
 type RenderFunc = (video: HTMLVideoElement, frame: number) => void
 type TimeUpdateFunc = (frame: number) => void
@@ -43,7 +44,6 @@ class VideoController {
     public duration: number = 0;
 
     constructor(private videoInfo: Video, onload: () => void) {
-        console.log("new video");
         let canvas = document.createElement("canvas");
         canvas.height = FRAME_COUNTER_HEIGHT;
         canvas.width = FRAME_COUNTER_WIDTH * FRAME_COUNTER_BITS;
@@ -58,6 +58,7 @@ class VideoController {
         video.style.width = "1px";
         video.style.height = "1px";
         video.crossOrigin = "Anonymus";
+        video.muted = true;
         video.setAttribute("playsinline", "")
         let source = document.createElement("source");
         if (video.canPlayType("application/vnd.apple.mpegurl")) {
@@ -68,7 +69,7 @@ class VideoController {
         video.appendChild(source);
         document.body.appendChild(video);
         video.addEventListener('error', (err) => {
-            console.log(err)
+            httpLog(err + "");
         })
         video.play()
         .then(() => {
@@ -81,7 +82,7 @@ class VideoController {
             onload();
         })
         .catch(err => {
-            console.log(err);
+            httpLog(err + " could not play error");
         })
         this.video = video;
     }

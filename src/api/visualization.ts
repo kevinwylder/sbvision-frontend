@@ -1,5 +1,5 @@
 import { Quaternion } from "../renderer/math";
-import { API_URL } from "./url";
+import { API_URL } from "../constants";
 
 export class VisualizationManager {
 
