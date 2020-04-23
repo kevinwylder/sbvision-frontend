@@ -1,4 +1,4 @@
-import { Quaternion } from "../math";
+import { Quaternion } from "../renderer/math";
 import { API_URL } from "./url";
 
 export class VisualizationManager {

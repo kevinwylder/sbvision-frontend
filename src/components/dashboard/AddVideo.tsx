@@ -3,52 +3,27 @@ import { uploadVideo, VideoStatus, streamVideoStatus, Video } from '../../api/vi
 import { ListRow } from '../list/Listing';
 
 interface addProps{
-    onVideoAdded?(video: Video): void
+    onVideoSelected?(video: Video): void
 }
-export function AddVideo({onVideoAdded}: addProps) {
-    let [ status, setStatus ] = React.useState<VideoStatus>();
-    let [ closeStream, setCloseStream ] = React.useState<() => void>();
+export function AddVideo({onVideoSelected}: addProps) {
+    let [ statuses, setStatuses ] = React.useState<VideoStatus[]>([]);
 
     React.useEffect(() => {
-        console.log("Salt");
-        const c = closeStream;
-        if (c) return () => c();
-    }, [closeStream])
-
-    React.useEffect(() => {
-        console.log("Yeah");
-        setCloseStream(streamVideoStatus(setStatus));
+        return streamVideoStatus(setStatuses);
     }, [])
 
-    React.useEffect(() => {
-        if (status?.complete) {
-            let timeout = setTimeout(() => {
-                setStatus(undefined);
-                if (onVideoAdded && status?.info) {
-                    onVideoAdded(status.info);
-                }
-            }, 5000);
-            return () => clearTimeout(timeout);
-        }
-    }, [status?.complete]);
+    return <div>
+        <UploadVideo />
+        { statuses.length > 0 && <h3> Pending Uploads </h3>}
+        { statuses.map((status, i) => 
+            <ShowVideoStatus key={i} {...status} />
+        )}
+    </div>
 
-    if (status) {
-        return <ShowVideoStatus {...status} />
-    }
-
-    return <UploadVideo setStatus={status => {
-        console.log("Uh")
-        setStatus(status);
-        setCloseStream(streamVideoStatus( setStatus ));
-    }} />
 }
 
 
-interface uploadProps {
-    //setRequestID: (id: string) => void
-    setStatus: (status: VideoStatus) => void
-}
-function UploadVideo({ setStatus }: uploadProps) {
+function UploadVideo() {
     let [ error, setError ] = React.useState("");
     let [ isPending, setIsPending ] = React.useState(false);
     let [ uploadProgress, setUploadProgress ] = React.useState<number>();
@@ -58,21 +33,32 @@ function UploadVideo({ setStatus }: uploadProps) {
 
     let onSubmit = () => {
         if (!url.current || !file.current || !title.current) return
+        const urlRef = url.current;
+        const fileRef = file.current;
+        const titleRef = title.current;
         setIsPending(true);
         setError("")
 
         let form = new FormData();
 
-        if (url.current.value != "") {
+        if (urlRef.value != "") {
             form.append('url', url.current.value);
-        } else if (title.current.value && file.current.files) {
-            form.append('video', file.current.files[0])
-            form.append('title', title.current.value)
+        } else if (titleRef.value && fileRef.files) {
+            form.append('video', fileRef.files[0])
+            form.append('title', titleRef.value)
         }
 
         uploadVideo(form, setUploadProgress)
-        .then(setStatus)
+        .then(() => {
+            setUploadProgress(undefined);
+            setIsPending(false);
+            setError("");
+            urlRef.value = "";
+            titleRef.value = "";
+            fileRef.value = "";
+        })
         .catch(err => {
+            setUploadProgress(undefined);
             setIsPending(false);
             setError(err + "");
         })
@@ -98,7 +84,7 @@ function UploadVideo({ setStatus }: uploadProps) {
             </div>
             <button disabled={isPending} onClick={onSubmit}> Upload </button>
         </div>
-        { uploadProgress && 
+        { uploadProgress !== undefined && 
         <div className="add-video-upload-progress">
             <div> Upload Progress - </div>
             <progress value={uploadProgress * 100} max={100}> { Math.floor(uploadProgress * 100) } % </progress>
@@ -107,14 +93,19 @@ function UploadVideo({ setStatus }: uploadProps) {
     </div>
 }
 
-function ShowVideoStatus({info, id, complete, status, success}: VideoStatus) {
-    if (info?.id) {
-        return <div className="listing"> 
-            <ListRow textCenter={status} title={info.title} thumbnail={info.thumbnail} />
-        </div>
-    }
-    return <div style={{color: (!complete) ? "black" : (success) ? "green" : "red"}}>
-        <h3> Video Request ID: {id} </h3>
-        <p> {status} </p>
+function ShowVideoStatus({info, is_complete, message, was_success, requestid}: VideoStatus) {
+    let textColor = (is_complete) ? (was_success ? "green" : "red") : "black";
+    return <div className="listing"> 
+        <div style={{color: textColor, fontSize: "15px"}}> { requestid }: { message } </div>
+        { info && <ListRow 
+            title={info.title} 
+            onClick={() => {
+
+            }}
+            textLeft={info.uploaded_by} 
+            textRight={info.from} 
+            textCenter={info.duration} 
+            thumbnail={info.thumbnail} /> 
+        }
     </div>
 }

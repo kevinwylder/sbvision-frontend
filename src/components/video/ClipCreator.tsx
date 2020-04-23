@@ -1,25 +1,29 @@
 import * as React from 'react';
 
 import { Video } from '../../api';
-import { VideoPlayer } from './video/VideoPlayer';
+import { VideoPlayer } from './VideoPlayer';
+import { getVideo } from '../../api/videos';
 
 interface props{
-    video: Video
-    exit: () => void
+    videoId: string
 }
-export function ClipCreator({video, exit}: props) {
+export function ClipCreator({videoId}: props) {
 
+    let [ video, setVideo ] = React.useState<Video>();
     let [ step, setStep ] = React.useState(1);
-    
+
+    React.useEffect(() => {
+        getVideo(videoId).then(video => setVideo(video));
+    }, []);
+
     return <div className="video-player">
         <ClipProgress step={step} />
-        <VideoPlayer
+        { video && <VideoPlayer
             width={600}
-            height={400}
-            video={video} />
+            height={600}
+            video={video} /> }
         <br/>
         <button onClick={() => setStep(Math.max(step - 1, 1))}> Prev </button>
-        <button onClick={exit}> Back to Home Page </button>
         <button onClick={() => setStep(Math.min(step + 1, 4))}> Next </button>
     </div>
 }

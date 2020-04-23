@@ -11,6 +11,7 @@ import { HomePage } from './components/HomePage';
 import { UserDashboard } from './components/dashboard/UserDashboard';
 import { isLoggedIn } from './api';
 import { Login } from "./components/login/Login";
+import { ClipCreator } from "./components/video/ClipCreator";
 
 export function Main() {
 
@@ -24,15 +25,18 @@ export function Main() {
     return <Router>
         <NavigationBar loggedIn={loggedIn} setLoggedIn={setLoggedIn} />
         <Switch>
-            <Route exact path="/" >
+            <Route exact path="/" render ={() => 
                 <HomePage />
-            </Route>
-            <Route path="/login">
-                <Login onLogin={setLoggedIn} redirect="/dashboard" />
-            </Route>
-            <Route path="/dashboard"> 
+            } />
+            <Route path="/login" render={() => 
+                <Login onLogin={setLoggedIn} redirect="/videos" />
+            } />
+            <Route path="/video/:id" render={({match}) => 
+                <ClipCreator videoId={match.params.id} />
+            } />
+            <Route path="/videos" render={() => 
                 <UserDashboard />
-            </Route>
+            } />
         </Switch>
     </Router>
 }

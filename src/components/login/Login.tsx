@@ -35,7 +35,10 @@ export function Login( { onLogin, redirect }: loginProps) {
     }
 
     if (needsUsername) {
-        return <ChooseUsername onUsernameVerified={() => onLogin(true)}/>
+        return <ChooseUsername onUsernameVerified={() => {
+            onLogin(true);
+            setNeedsRedirect(true);
+        }}/>
     }
 
     return <div> Loading... </div>

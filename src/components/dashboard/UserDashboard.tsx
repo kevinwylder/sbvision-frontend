@@ -6,7 +6,6 @@ import { AddVideo } from './AddVideo';
 import { ListElement, Listing } from '../list/Listing';
 import { getVideos, Video } from '../../api/videos';
 import { Redirect } from 'react-router-dom';
-import { ClipCreator } from './ClipCreator';
 
 export function UserDashboard() {
 
@@ -45,13 +44,13 @@ export function UserDashboard() {
     }
 
     if (selectedVideo) {
-        return <ClipCreator exit={() => setSelectedVideo(undefined)} video={selectedVideo} />
+        return <Redirect to={`/video/${selectedVideo.id}`} />
     }
 
     return <>
         <div className="dashboard-container">
             <h1> Hello, {info.username}</h1>
-            <AddVideo onVideoAdded={(video) => {
+            <AddVideo onVideoSelected={(video) => {
                 setSelectedVideo(video);
             }}/>
             <h1> Your Videos </h1>

@@ -10,12 +10,12 @@ export function ChooseUsername({ onUsernameVerified }: chooseUsernameProps) {
     let [ usernameTaken, setUsernameTaken ] = React.useState(false);
     let inputbox = React.createRef<HTMLInputElement>();
 
-    return <div>
+    return <div style={{margin: "auto", maxWidth: "690px", padding: "30px", textAlign: "center"}}>
         <h1>Welcome to the Skateboard Vision Project</h1>
 
         <p> Please choose a username this will appear next to your contributions </p>
 
-        <input type="text" ref={inputbox} />
+        <input type="text" ref={inputbox} style={{marginBottom: "5px"}}autoFocus /> <br/>
         <button onClick={() => {
             if (!inputbox.current) {
                 return

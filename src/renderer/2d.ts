@@ -1,4 +1,4 @@
-import { qRotate, Quaternion, Vector } from "../math";
+import { qRotate, Quaternion, Vector } from "./math";
 
 type Triangle = [ number, number, number ] // these are "pointers" in the points array
 

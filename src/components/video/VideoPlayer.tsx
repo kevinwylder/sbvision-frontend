@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Video } from '../../../api';
+import { Video } from '../../api';
 import { getVideoControls, VideoControls } from './controls';
 
 const relativeCoords = (e: {clientX: number, clientY: number}, elem: HTMLElement) => {
@@ -56,8 +56,11 @@ export function VideoPlayer({ video, width, height }: VideoPlayerProps) {
         const canvas = videoCanvas.current;
         const ctx = canvas?.getContext("2d");
         if (!ctx || !canvas) return;
+
+        let controlsCleanup: VideoControls;
         getVideoControls(video)
         .then(controls => {
+            controlsCleanup = controls;
             setVideoControls(controls);
             let { width, height } = canvas.getBoundingClientRect();
             if (width * controls.height > controls.width * height) {
@@ -70,13 +73,12 @@ export function VideoPlayer({ video, width, height }: VideoPlayerProps) {
                 canvas.height = window.devicePixelRatio * width * controls.height / controls.width;
             }
             controls.addRenderFunc((data, frame) => {
-                ctx.drawImage(data, 0, 0, ctx.canvas.width, ctx.canvas.height);
-                ctx.fillText("" + frame, 10, 10);
+                ctx.drawImage(data, 0, 2, controls.width, controls.height, 0, 0, ctx.canvas.width, ctx.canvas.height);
             });
         })
         .catch(err => console.log(err));
 
-        return () => videoControls?.destroy();
+        return () => controlsCleanup?.destroy();
     }, [videoCanvas.current]);
 
     // sync scrubber to progress

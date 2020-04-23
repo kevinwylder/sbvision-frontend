@@ -17,7 +17,7 @@ export function NavigationBar( { loggedIn, setLoggedIn }: navBarProps ) {
             <Link to="/" className="nav-bar-tab" ><RotatingSkateboard/></Link>
             <Link to="/tricks" className="nav-bar-tab"><div> Tricks </div></Link>
             <Link to="/dataset" className="nav-bar-tab"><div> Dataset </div></Link>
-            <Link to="/dashboard" className="nav-bar-tab"><div> Dashboard </div></Link>
+            <Link to="/videos" className="nav-bar-tab"><div> Videos </div></Link>
             <Link to="/" className="nav-bar-tab nav-bar-tab-last" onClick={() => {
                 logout();
                 setLoggedIn(false);

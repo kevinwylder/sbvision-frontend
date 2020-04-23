@@ -1,4 +1,4 @@
-import { Quaternion } from "../math";
+import { Quaternion } from "../renderer/math";
 
 export interface Bound {
     id: number

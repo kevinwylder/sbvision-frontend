@@ -1,4 +1,4 @@
-import { Video } from "../../../api";
+import { Video } from "../../api";
 
 type RenderFunc = (video: HTMLVideoElement, frame: number) => void
 type TimeUpdateFunc = (frame: number) => void

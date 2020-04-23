@@ -1,4 +1,4 @@
-import { Graphable111, Graphable213, rationalEase, bezier, compose, scale, translate, identity, cross, one, absolute } from "../math";
+import { Graphable111, Graphable213, rationalEase, bezier, compose, scale, translate, identity, cross, one, absolute } from "./math";
 
 interface sbDeckParams {
     width: number

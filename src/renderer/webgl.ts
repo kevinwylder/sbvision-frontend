@@ -1,7 +1,7 @@
-import { Quaternion, bezier, exponentNorm } from "../math";
+import { Quaternion, bezier, exponentNorm } from "./math";
 import { skateboardGeometry } from "./deck";
 import { wheelGeometry } from "./wheel";
-import { describeBox } from "../math/layout";
+import { describeBox } from "./math/layout";
 
 const DECK_GRAPHIC = 0;
 const GRIP_TAPE = 1;

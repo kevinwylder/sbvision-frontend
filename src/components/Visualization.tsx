@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { VisualizationManager } from '../api';
 import { renderSkateboard } from '../renderer';
-import { Quaternion, rotateSkateboard, tiltSkateboard } from '../math';
+import { Quaternion, rotateSkateboard, tiltSkateboard } from '../renderer/math';
 
 export function DataVisualization() {
     // map canvas mouse events to the websocket
