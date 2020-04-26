@@ -41,6 +41,7 @@ function transformVideo(video: apiVideo): Video {
         src: `https://skateboardvision.net/video/${video.id}/video.mp4`,
         hls: `https://skateboardvision.net/video/${video.id}/playlist.m3u8`,
         thumbnail: `https://skateboardvision.net/video/${video.id}/thumbnail.jpg`,
+        height: video.height - 2,
     }
 }
 

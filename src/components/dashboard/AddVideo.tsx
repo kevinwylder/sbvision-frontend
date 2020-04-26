@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { uploadVideo, VideoStatus, streamVideoStatus, Video } from '../../api/videos';
-import { ListRow } from '../list/Listing';
+import { ListRow } from './list/Listing';
 
 interface addProps{
     onVideoSelected?(video: Video): void

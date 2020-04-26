@@ -3,7 +3,7 @@ import { UserInfo, getUserInfo } from '../../api';
 
 import "./dashboard.css"
 import { AddVideo } from './AddVideo';
-import { ListElement, Listing } from '../list/Listing';
+import { ListElement, Listing } from './list/Listing';
 import { getVideos, Video } from '../../api/videos';
 import { Redirect } from 'react-router-dom';
 

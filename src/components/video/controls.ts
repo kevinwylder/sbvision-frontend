@@ -1,30 +1,40 @@
 import { Video } from "../../api";
 import { httpLog } from "../../api/log";
 
-type RenderFunc = (video: HTMLVideoElement, frame: number) => void
-type TimeUpdateFunc = (frame: number) => void
+export type RenderFunc = () => void
 export interface VideoControls {
     readonly width: number
     readonly height: number
     readonly duration: number
+    readonly fps: number
+    readonly frame: number
+    readonly startFrame: number;
+    readonly endFrame: number;
+    readonly playing: boolean
 
-    addRenderFunc(renderer: RenderFunc):void;
-    setTime(frame: number): void;
+    setCanvas(canvas: HTMLCanvasElement): void
+    addRenderFunc(renderer: RenderFunc): number
+    removeRenderFunc(n: number): void
 
+    destroy(): void
+
+    goToStart(): void
+    setTime(frame: number): void
+    nextFrame(): void
+    setTimeRange(start: number, end: number): void
+    normalizeRangeTo(duration: number): void
+    setTransform(dx: number, dy: number, scale: number): void
     pause(): void
     play(): void
+}
 
+export interface PendingVideoControls {
+    start(setControls: (controls: VideoControls) => void): void;
     destroy(): void;
 }
 
-export function getVideoControls(video: Video): Promise<VideoControls> {
-    return new Promise((resolve, reject) => {
-        try {
-            const controls = new VideoController(video, () => { resolve(controls); });
-        } catch (err) {
-            reject(err);
-        }
-    })
+export function getVideoControls(video: Video): PendingVideoControls {
+    return new VideoController(video);
 }
 
 const FRAME_COUNTER_BITS = 16;
@@ -33,25 +43,29 @@ const FRAME_COUNTER_WIDTH = 4;
 
 class VideoController {
 
-    private frameCtx: CanvasRenderingContext2D;
+    private counterCtx: CanvasRenderingContext2D;
+    private ctx: CanvasRenderingContext2D|null = null;
     private video: HTMLVideoElement;
     private animationInterval: number = 0;
-    private frameUpdateListeners: TimeUpdateFunc[] = [];
-    private renderers: RenderFunc[] = [];
+    private renderers: { [key: number]: RenderFunc } = {};
 
+    public fps: number = this.videoInfo.fps;
+    public startFrame = 0;
+    public endFrame = 0;
     public width: number = 0;
     public height: number = 0;
     public duration: number = 0;
+    public playing: boolean = false
 
-    constructor(private videoInfo: Video, onload: () => void) {
-        let canvas = document.createElement("canvas");
-        canvas.height = FRAME_COUNTER_HEIGHT;
-        canvas.width = FRAME_COUNTER_WIDTH * FRAME_COUNTER_BITS;
-        let ctx = canvas.getContext("2d");
+    constructor(private videoInfo: Video) {
+        let counter = document.createElement("canvas");
+        counter.width = FRAME_COUNTER_BITS * FRAME_COUNTER_WIDTH;
+        counter.height = FRAME_COUNTER_HEIGHT;
+        let ctx = counter.getContext("2d");
         if (!ctx) {
-            throw new Error("No canvas support");
+            throw new Error("no context");
         }
-        this.frameCtx = ctx;
+        this.counterCtx = ctx;
 
         let video = document.createElement("video");
         video.style.visibility = "hidden";
@@ -59,6 +73,7 @@ class VideoController {
         video.style.height = "1px";
         video.crossOrigin = "Anonymus";
         video.muted = true;
+        video.loop = true;
         video.setAttribute("playsinline", "")
         let source = document.createElement("source");
         if (video.canPlayType("application/vnd.apple.mpegurl")) {
@@ -71,29 +86,53 @@ class VideoController {
         video.addEventListener('error', (err) => {
             httpLog(err + "");
         })
-        video.play()
-        .then(() => {
-            this.width = video.videoWidth;
-            this.height = video.videoHeight - FRAME_COUNTER_HEIGHT;
-            this.duration = video.duration * this.videoInfo.fps;
-            this.animationInterval = window.setInterval(() => {
-                this.countVideoFrame();
-            }, 1000 / this.videoInfo.fps);
-            onload();
-        })
-        .catch(err => {
-            httpLog(err + " could not play error");
-        })
         this.video = video;
     }
 
-    private lastFrame: number = -1;
+    public start(setControls: (c: VideoControls) => void) {
+        return this.video.play()
+        .then(() => {
+            this.playing = true;
+            this.width = this.video.videoWidth;
+            this.height = this.video.videoHeight - FRAME_COUNTER_HEIGHT;
+            this.duration = Math.floor(this.video.duration * this.videoInfo.fps);
+            this.setTimeRange(0, this.duration);
+            this.animationInterval = window.setInterval(() => {
+                this.countVideoFrame();
+            }, 1000 / this.videoInfo.fps);
+            setControls(this);
+        });
+    } 
+
+    public setCanvas(canvas: HTMLCanvasElement) {
+        let { width, height } = canvas.getBoundingClientRect();
+        if (width * this.video.height > this.video.width * height) {
+            // the canvas is relatively wider than the video
+            canvas.width = window.devicePixelRatio * height * this.videoInfo.width / this.videoInfo.height;
+            canvas.height = window.devicePixelRatio * height;
+        } else {
+            // the canvas is relatively taller than the video
+            canvas.width = window.devicePixelRatio * width;
+            canvas.height = window.devicePixelRatio * width * this.videoInfo.height / this.videoInfo.width;
+        }
+        console.log(canvas.height, canvas.width)
+        this.ctx = canvas.getContext("2d");
+        if (!this.ctx) {
+            throw new Error("Cannot set controls on the given canvas, no context");
+        }
+    }
+
+    public frame: number = -1;
     private countVideoFrame() {
-        this.frameCtx.drawImage(this.video, 
+        const ctx = this.ctx;
+        if (!ctx) {
+            return
+        }
+        this.counterCtx.drawImage(this.video, 
             0, 0, FRAME_COUNTER_WIDTH * FRAME_COUNTER_BITS, FRAME_COUNTER_HEIGHT, 
-            0, 0, FRAME_COUNTER_WIDTH * FRAME_COUNTER_BITS, FRAME_COUNTER_HEIGHT, 
+            0, 0, FRAME_COUNTER_WIDTH * FRAME_COUNTER_BITS, FRAME_COUNTER_HEIGHT 
         );
-        let counterData = this.frameCtx.getImageData(0, 0, FRAME_COUNTER_WIDTH * FRAME_COUNTER_BITS, FRAME_COUNTER_HEIGHT).data;
+        let counterData = this.counterCtx.getImageData(0, 0, FRAME_COUNTER_WIDTH * FRAME_COUNTER_BITS, 1).data;
         let counter = 0;
         let power = 1;
         for (let i = 0; i < FRAME_COUNTER_BITS; i++) {
@@ -102,30 +141,83 @@ class VideoController {
             }
             power *= 2;
         }
-        if (counter != this.lastFrame) {
-            this.renderers.forEach(f => f(this.video, counter));
-            this.lastFrame = counter;
+        if (this.playing) {
+            if (counter < this.startFrame || counter > this.endFrame) {
+                this.goToStart();
+                return
+            }
+        }
+        if (counter != this.frame) {
+            this.frame = counter;
+            this.draw();
         }
     }
 
-    public addRenderFunc(renderer: RenderFunc) {
-        this.renderers.push(renderer);
+    private draw() {
+        const { ctx } = this;
+        if (!ctx) return;
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.drawImage(this.video, this.dx, this.dy, this.scale * ctx.canvas.width, this.scale * ctx.canvas.height);
+        Object.values(this.renderers).forEach(f => f());
     }
 
-    public addTimeUpdateListener(func: TimeUpdateFunc) {
-        this.frameUpdateListeners.push(func);
+    private lastResetRequest = 0;
+    public goToStart() {
+        if (Date.now() - this.lastResetRequest < 1000) {
+            return
+        }
+        this.setTime(this.startFrame);
+        this.lastResetRequest = Date.now();
+    }
+
+    public addRenderFunc(renderer: RenderFunc) {
+        let id = Math.random();
+        this.renderers[id] = renderer;
+        return id;
+    }
+
+    public removeRenderFunc(id: number) {
+        delete(this.renderers[id]);
     }
 
     public setTime(frame: number) {
-        this.video.currentTime = frame / this.videoInfo.fps;
+        this.video.currentTime = (frame + 0.5) / this.videoInfo.fps;
+    }
+
+    public nextFrame() {
+        let { frame, startFrame, endFrame } = this;
+        let nextFrame = ((frame + 1 - startFrame) % (endFrame - startFrame + 1)) + startFrame;
+        this.setTime(nextFrame);
+    }
+
+    public setTimeRange(start: number, end: number) {
+        this.startFrame = Math.floor(Math.min(start, end - 1));
+        this.endFrame = Math.ceil(Math.max(start, end));
+    }
+
+    public normalizeRangeTo(duration: number) {
+        let rangeDuration = (this.endFrame - this.startFrame) / this.videoInfo.fps;
+        this.video.playbackRate = Math.max(rangeDuration / duration, .09);
+    }
+
+    private dx = 0;
+    private dy = 0;
+    private scale = 1;
+    public setTransform(dx: number, dy: number, scale: number) {
+        this.dx = -scale * dx;
+        this.dy = -scale * dy;
+        this.scale = scale
+        this.draw();
     }
 
     public pause() {
-        this.video.pause();
+        this.video.pause()
+        this.playing = false;
     }
 
     public play() {
-        this.video.play();
+        this.playing = true;
+        this.video.play()
     }
 
     public destroy() {
