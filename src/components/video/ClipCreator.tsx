@@ -65,18 +65,20 @@ export function ClipCreator({videoId}: props) {
             height={height}
             step={step}
             addBox={(b) => {
-                if (!controls) return
+                if (!controls) return false
                 boxes = {...boxes, [controls.frame]: b }
                 setBoxes(boxes);
-                setReady(Object.keys(boxes).length > controls.endFrame - controls.startFrame);
+                let isReady = Object.keys(boxes).length > controls.endFrame - controls.startFrame
+                setReady(isReady);
+                return isReady;
             }}
             addRotation={(r) => {
-                if (!controls) return 
+                if (!controls) return false
                 rotations = {...rotations, [controls.frame]: r}
                 setRotations(rotations);
-                if (Object.keys(rotations).length > controls.endFrame - controls.startFrame) {
-                    setStep(step + 1);
-                }
+                let isReady = Object.keys(rotations).length > controls.endFrame - controls.startFrame
+                setReady(isReady);
+                return isReady;
             }}
             onVideoLoaded={(controls) => {
                 setControls(controls);

@@ -1,5 +1,5 @@
 import { VideoControls } from "../controls";
-import { TapMode } from "../gesture";
+import { TapMode, KeyEvent } from "../gesture";
 import { rotateSkateboard, tiltSkateboard } from "../../../renderer/math";
 import { renderSkateboard } from "../../../renderer";
 import { Rotation, Box } from "../ClipCreator";
@@ -9,17 +9,19 @@ export class RotateBoard {
 
     private r: Rotation = [1, 0, 0, 0];
     private ctx: CanvasRenderingContext2D
+    private rotations: { [f: number]: Rotation } = {};
 
     constructor(
         private canvas: HTMLCanvasElement,
         private controls: VideoControls,
         private boxes: BoxFrame,
-        private addRotation: (rotation: Rotation) => void,
+        private addRotation: (rotation: Rotation) => boolean,
     ) {
         let ctx = canvas.getContext("2d");
         if (!ctx) {
             throw new Error("No context");
         }
+        this.controls.pause()
         this.controls.goToStart();
         this.ctx = ctx;
         this.setTranslation(boxes.getBox(this.controls.startFrame).asStruct());
@@ -37,7 +39,11 @@ export class RotateBoard {
 
     public tap(mode: TapMode, x: number, y: number) {
         if (mode == TapMode.UP) {
-            this.addRotation(this.r);
+            this.rotations[this.controls.frame] = this.r;
+            let ready = this.addRotation(this.r);
+            if (ready) {
+                document.exitPointerLock();
+            }
             let { frame, startFrame, endFrame } = this.controls;
             let nextFrame = ((frame + 1 - startFrame) % (endFrame - startFrame + 1)) + startFrame;
             let box = this.boxes.getBox(nextFrame);
@@ -50,14 +56,31 @@ export class RotateBoard {
         }
     }
 
+    public key(k: KeyEvent) {
+        if (k == KeyEvent.NEXT_FRAME) {
+            this.tap(TapMode.UP, 0, 0);
+        } else if (k == KeyEvent.PREV_FRAME) {
+            let { frame, startFrame, endFrame } = this.controls;
+            let clipSize = endFrame - startFrame + 1
+            let prevFrame = ((((frame - 1 - startFrame) % clipSize) + clipSize) % clipSize) + startFrame;
+            let prevBox = this.boxes.getBox(prevFrame);
+            if (prevBox) {
+                this.setTranslation(prevBox.asStruct());
+            }
+            this.controls.prevFrame();
+        }
+    }
+
     private setTranslation(box: Box) {
         let { x, y, w, h } = box;
         let { width, height } = this.canvas;
         let dstPadding = Math.min(width / 2, height) * 0.1;
-        let dstSide = Math.min(width / 2, height) - 2 * dstPadding;
+        let dstSide = Math.min(width / 2, height) - 2 * dstPadding
+        let dstTop = (height - dstSide) / 2;
+        let dstLeft = (width / 2 - dstSide) / 2;
         let scale = dstSide / Math.max(w, h);
-        let l = x - Math.max(0, h - w) / 2 - dstPadding / scale;
-        let t = y - Math.max(0, w - h) / 2 - dstPadding / scale;
+        let l = x - Math.max(0, h - w) / 2 - dstLeft / scale;
+        let t = y - Math.max(0, w - h) / 2 - dstTop / scale;
         this.controls.setTransform(l, t, scale);
         this.render();
     }
@@ -68,6 +91,9 @@ export class RotateBoard {
         this.ctx.clearRect(0, 0, width, height);
 
         // draw the skateboard in an "object-fit: contain;"" behaving square on the right half of canvas
+        if (this.rotations[this.controls.frame]) {
+            this.r = this.rotations[this.controls.frame];
+        }
         let dstPadding = Math.min(width / 2, height) * 0.1;
         let dstSide = Math.min(width / 2, height) - 2 * dstPadding;
         let dstTop = (height - dstSide) / 2;

@@ -1,5 +1,5 @@
 import { VideoControls } from "../controls";
-import { TapMode, DragMode } from "../gesture";
+import { TapMode, DragMode, KeyEvent } from "../gesture";
 import { Box } from "../ClipCreator";
 
 const boxWidth = window.devicePixelRatio * 7;
@@ -8,11 +8,12 @@ export class BoxFrame {
 
     private ctx: CanvasRenderingContext2D;
     private boxes: { [frame: number]: GrabBox } = {};
+    private hasPlayedAfterComplete = false;
 
     constructor(
         private canvas: HTMLCanvasElement,
         private controls: VideoControls,
-        private addBox: (b: Box) => void,
+        private addBox: (b: Box) => boolean,
     ){
         let ctx = canvas.getContext("2d");
         if (!ctx) {
@@ -46,7 +47,11 @@ export class BoxFrame {
             this.boxes[this.controls.frame] = box;
         }
         if (mode == TapMode.UP) {
-            this.addBox(box.asStruct());
+            let ready = this.addBox(box.asStruct());
+            if (ready && !this.hasPlayedAfterComplete) {
+                this.controls.play();
+                this.hasPlayedAfterComplete = true;
+            }
             let { frame, startFrame, endFrame } = this.controls;
             let nextFrame = ((frame + 1 - startFrame) % (endFrame - startFrame + 1)) + startFrame;
             if (!this.boxes[nextFrame]) {
@@ -54,6 +59,20 @@ export class BoxFrame {
                 this.boxes[nextFrame] = new GrabBox(x, y, w, h);
             }
             this.controls.nextFrame();
+        }
+    }
+
+    public key(k: KeyEvent) {
+        if (k == KeyEvent.NEXT_FRAME) {
+            this.tap(TapMode.UP, 0, 0);
+        } else if (k == KeyEvent.PREV_FRAME) {
+            this.controls.prevFrame();
+        } else if (k == KeyEvent.PLAYPAUSE) {
+            if (this.controls.playing) {
+                this.controls.pause();
+            } else {
+                this.controls.play();
+            }
         }
     }
 

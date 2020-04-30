@@ -21,6 +21,7 @@ export interface VideoControls {
     goToStart(): void
     setTime(frame: number): void
     nextFrame(): void
+    prevFrame(): void
     setTimeRange(start: number, end: number): void
     normalizeRangeTo(duration: number): void
     setTransform(dx: number, dy: number, scale: number): void
@@ -188,6 +189,13 @@ class VideoController {
         let { frame, startFrame, endFrame } = this;
         let nextFrame = ((frame + 1 - startFrame) % (endFrame - startFrame + 1)) + startFrame;
         this.setTime(nextFrame);
+    }
+
+    public prevFrame() {
+        let { frame, startFrame, endFrame } = this;
+        let clipSize = endFrame - startFrame + 1;
+        let prevFrame = ((((frame - 1 - startFrame) % clipSize) + clipSize) % clipSize) + startFrame;
+        this.setTime(prevFrame);
     }
 
     public setTimeRange(start: number, end: number) {

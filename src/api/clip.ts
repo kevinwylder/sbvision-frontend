@@ -6,5 +6,5 @@ export interface ClipData {
 
     startFrame: number
     endFrame: number
-    tricks: string[]
+    tricks: string
 }

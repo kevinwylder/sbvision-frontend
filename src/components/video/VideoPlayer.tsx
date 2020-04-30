@@ -13,8 +13,8 @@ interface VideoPlayerProps {
     height: number
     video: Video
     step: number
-    addRotation: (r: Rotation) => void
-    addBox: (b: Box) => void
+    addRotation: (r: Rotation) => boolean
+    addBox: (b: Box) => boolean
     onVideoLoaded ?: (controls: VideoControls) => void;
 }
 export function VideoPlayer({ video, width, height, step, onVideoLoaded, addRotation, addBox }: VideoPlayerProps) {
@@ -26,11 +26,9 @@ export function VideoPlayer({ video, width, height, step, onVideoLoaded, addRota
 
     // Load the video and setup hook to clean it up once we're done
     React.useEffect(() => {
-        console.log("Make a mess");
         let controls = getVideoControls(video)
         setPendingControls(controls);
         return () => {
-            console.log("Clean up yo mess");
             controls.destroy();
         }
     }, []);

@@ -6,12 +6,16 @@ export enum TapMode {
 export enum DragMode {
     START, MOVE, END
 }
+export enum KeyEvent {
+    NEXT_FRAME, PREV_FRAME, PLAYPAUSE
+}
 
 interface GestureListeners{
     tap?(mode: TapMode, x: number, y: number): void
     drag?(mode: DragMode, x: number, y: number, dx: number, dy: number): void
     scroll?(dz: number): void
-    move?(dx: number, dy: number,): void
+    move?(dx: number, dy: number): void
+    key?(code: KeyEvent): void
 }
 
 interface Position {
@@ -103,15 +107,34 @@ export function handleGestures(elem: HTMLCanvasElement, listeners: GestureListen
     }
 
     const onmousedown = function(e: MouseEvent) {
+        if (listeners.move && document.pointerLockElement != elem) {
+            elem.requestPointerLock();
+        }
         e.stopPropagation();
         e.preventDefault();
         down(e);
     }
 
+    let mouseIntegral: Position|undefined;
     const onmousemove = (e: MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
-        move(e);
+        if (document.pointerLockElement == elem) {
+            // locked
+            if (!mouseIntegral) {
+                mouseIntegral = { 
+                    clientX: e.clientX, 
+                    clientY: e.clientY
+                };
+            } else {
+                mouseIntegral.clientX += e.movementX;
+                mouseIntegral.clientY += e.movementY;
+            }
+            move(mouseIntegral);
+        } else {
+            mouseIntegral = undefined;
+            move(e);
+        }
     }
 
     const onmouseup = (e: MouseEvent) => {
@@ -177,22 +200,44 @@ export function handleGestures(elem: HTMLCanvasElement, listeners: GestureListen
         }
     }
 
+    const onkeypress = (e: KeyboardEvent) => {
+        if (!listeners.key) {
+            return;
+        }
+        switch(e.key) {
+        case " ":
+            listeners.key(KeyEvent.PLAYPAUSE);
+            break;
+        case "ArrowLeft":
+            listeners.key(KeyEvent.PREV_FRAME);
+            break;
+        case "ArrowRight":
+            listeners.key(KeyEvent.NEXT_FRAME);
+        }
+    }
+
     elem.addEventListener("mousedown", onmousedown, true)
     elem.addEventListener("touchstart", ontouchstart, true);
-    window.addEventListener("mousemove", onmousemove, true)
+    elem.addEventListener("mousemove", onmousemove, true)
+
     window.addEventListener("touchmove", ontouchmove, { capture: true, passive: false });
     window.addEventListener("mouseup", onmouseup, true);
     window.addEventListener("touchend", ontouchend, true);
     window.addEventListener("touchcancel", ontouchend, true);
     window.addEventListener("wheel", onwheel, true);
+    window.addEventListener("keydown", onkeypress, true)
     return () => {
         elem.removeEventListener("mousedown", onmousedown, true);
         elem.removeEventListener("touchstart", ontouchstart, true);
-        window.removeEventListener("mousemove", onmousemove, true);
+        elem.removeEventListener("mousemove", onmousemove, true);
         window.removeEventListener("touchmove", ontouchmove, true);
         window.removeEventListener("mouseup", onmouseup, true);
         window.removeEventListener("touchend", ontouchend, true);
         window.removeEventListener("touchcancel", ontouchend, true);
         window.removeEventListener("wheel", onwheel, true);
+        window.removeEventListener("keydown", onkeypress, true);
+        if (listeners.move) {
+            document.exitPointerLock();
+        }
     }
 }
