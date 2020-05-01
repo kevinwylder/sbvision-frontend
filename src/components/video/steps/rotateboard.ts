@@ -9,13 +9,13 @@ export class RotateBoard {
 
     private r: Rotation = [1, 0, 0, 0];
     private ctx: CanvasRenderingContext2D
-    private rotations: { [f: number]: Rotation } = {};
 
     constructor(
         private canvas: HTMLCanvasElement,
         private controls: VideoControls,
         private boxes: BoxFrame,
         private addRotation: (rotation: Rotation) => boolean,
+        private rotations: { [f: number]: Rotation } = {}
     ) {
         let ctx = canvas.getContext("2d");
         if (!ctx) {
@@ -24,7 +24,7 @@ export class RotateBoard {
         this.controls.pause()
         this.controls.goToStart();
         this.ctx = ctx;
-        this.setTranslation(boxes.getBox(this.controls.startFrame).asStruct());
+        this.setFrame(this.controls.startFrame);
     }
 
     public move(dx: number, dy: number) {
@@ -46,13 +46,7 @@ export class RotateBoard {
             }
             let { frame, startFrame, endFrame } = this.controls;
             let nextFrame = ((frame + 1 - startFrame) % (endFrame - startFrame + 1)) + startFrame;
-            let box = this.boxes.getBox(nextFrame);
-            if (!box) {
-                this.controls.nextFrame();
-                return;
-            }
-            this.setTranslation(box.asStruct());
-            this.controls.nextFrame();
+            this.setFrame(nextFrame);
         }
     }
 
@@ -63,12 +57,20 @@ export class RotateBoard {
             let { frame, startFrame, endFrame } = this.controls;
             let clipSize = endFrame - startFrame + 1
             let prevFrame = ((((frame - 1 - startFrame) % clipSize) + clipSize) % clipSize) + startFrame;
-            let prevBox = this.boxes.getBox(prevFrame);
-            if (prevBox) {
-                this.setTranslation(prevBox.asStruct());
-            }
-            this.controls.prevFrame();
+            this.setFrame(prevFrame);
         }
+    }
+
+    private setFrame(n: number) {
+        let box = this.boxes.getBox(n);
+        if (box) {
+            this.setTranslation(box.asStruct());
+        }
+        let rotation = this.rotations[n]
+        if (rotation) {
+            this.r = rotation;
+        }
+        this.controls.setTime(n)
     }
 
     private setTranslation(box: Box) {
@@ -82,18 +84,12 @@ export class RotateBoard {
         let l = x - Math.max(0, h - w) / 2 - dstLeft / scale;
         let t = y - Math.max(0, w - h) / 2 - dstTop / scale;
         this.controls.setTransform(l, t, scale);
-        this.render();
     }
 
     public render() {
         let box = this.boxes.getBox();
         let { width, height } = this.canvas;
         this.ctx.clearRect(0, 0, width, height);
-
-        // draw the skateboard in an "object-fit: contain;"" behaving square on the right half of canvas
-        if (this.rotations[this.controls.frame]) {
-            this.r = this.rotations[this.controls.frame];
-        }
         let dstPadding = Math.min(width / 2, height) * 0.1;
         let dstSide = Math.min(width / 2, height) - 2 * dstPadding;
         let dstTop = (height - dstSide) / 2;
@@ -132,4 +128,11 @@ export class RotateBoard {
         this.ctx.stroke();
     }
 
+    public animate(): number {
+        return window.setInterval(() => {
+            let { frame, startFrame, endFrame } = this.controls;
+            let nextFrame = ((frame + 1 - startFrame) % (endFrame - startFrame + 1)) + startFrame;
+            this.setFrame(nextFrame);
+        }, 500);
+    }
 }

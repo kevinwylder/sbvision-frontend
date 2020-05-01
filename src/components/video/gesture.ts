@@ -107,19 +107,21 @@ export function handleGestures(elem: HTMLCanvasElement, listeners: GestureListen
     }
 
     const onmousedown = function(e: MouseEvent) {
-        if (listeners.move && document.pointerLockElement != elem) {
-            elem.requestPointerLock();
-        }
         e.stopPropagation();
         e.preventDefault();
         down(e);
     }
 
+    let lastLockedMouse = 0;
     let mouseIntegral: Position|undefined;
     const onmousemove = (e: MouseEvent) => {
+        if (listeners.move && Date.now() - lastLockedMouse > 5000 && document.pointerLockElement != elem) {
+            elem.requestPointerLock();
+        }
         e.stopPropagation();
         e.preventDefault();
         if (document.pointerLockElement == elem) {
+            lastLockedMouse = Date.now();
             // locked
             if (!mouseIntegral) {
                 mouseIntegral = { 
@@ -133,14 +135,20 @@ export function handleGestures(elem: HTMLCanvasElement, listeners: GestureListen
             move(mouseIntegral);
         } else {
             mouseIntegral = undefined;
-            move(e);
+            if (!listeners.move) {
+                move(e);
+            }
         }
     }
 
     const onmouseup = (e: MouseEvent) => {
+        if (document.pointerLockElement) {
+            lastLockedMouse = Date.now();
+        }
         if (!dragging) {
             return;
         }
+        mouseIntegral = undefined;
         e.stopPropagation();
         e.preventDefault();
         up(e);
@@ -195,8 +203,12 @@ export function handleGestures(elem: HTMLCanvasElement, listeners: GestureListen
     }
 
     const onwheel = (e: WheelEvent) => {
-        if (listeners.scroll) {
+        if (listeners.scroll && document.pointerLockElement) {
             listeners.scroll(e.deltaY);
+            if (document.pointerLockElement) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
         }
     }
 
@@ -218,13 +230,13 @@ export function handleGestures(elem: HTMLCanvasElement, listeners: GestureListen
 
     elem.addEventListener("mousedown", onmousedown, true)
     elem.addEventListener("touchstart", ontouchstart, true);
-    elem.addEventListener("mousemove", onmousemove, true)
+    elem.addEventListener("mousemove", onmousemove, { capture: true, passive: false });
 
     window.addEventListener("touchmove", ontouchmove, { capture: true, passive: false });
     window.addEventListener("mouseup", onmouseup, true);
     window.addEventListener("touchend", ontouchend, true);
     window.addEventListener("touchcancel", ontouchend, true);
-    window.addEventListener("wheel", onwheel, true);
+    window.addEventListener("wheel", onwheel, { capture: true, passive: false });
     window.addEventListener("keydown", onkeypress, true)
     return () => {
         elem.removeEventListener("mousedown", onmousedown, true);

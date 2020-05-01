@@ -5,6 +5,8 @@ import { Video } from '../../api';
 import { VideoPlayer } from './VideoPlayer';
 import { getVideo } from '../../api/videos';
 import { VideoControls } from './controls';
+import { addClip } from '../../api/clip';
+import { Redirect } from 'react-router-dom';
 
 export interface Box {
     x: number
@@ -18,7 +20,6 @@ export type Rotation = [number, number, number, number];
 interface props{
     videoId: string
 }
-
 export function ClipCreator({videoId}: props) {
 
     let [ step, setStep ] = React.useState(1);
@@ -35,7 +36,7 @@ export function ClipCreator({videoId}: props) {
             stepText = "3rd Dimension - Orientation";
             break
         case 4:
-            stepText = "Sending Data";
+            stepText = "Complete!";
             break
     }
 
@@ -58,7 +59,10 @@ export function ClipCreator({videoId}: props) {
     let [ rotations, setRotations ] = React.useState<{[frame: number]: Rotation}>({});
 
     return <div className="video-player">
-        <ClipProgress step={step} />
+        <ClipProgress step={step} ready={ready} onNext={() => {
+            setStep(step+1);
+            setReady(false);
+        }} />
         <h3 style={{WebkitUserSelect: "none"}}> {stepText} </h3>
         { video && <VideoPlayer
             width={width}
@@ -88,17 +92,13 @@ export function ClipCreator({videoId}: props) {
         { step == 1 && <StepOne /> }
         { step == 2 && <StepTwo /> }
         { step == 3 && <StepThree /> }
-        { step == 4 && <div>
-            Gonna send all this to the server: <pre style={{textAlign: "left"}}> { JSON.stringify({
-                id: video?.id,
-                startFrame: controls?.startFrame,
-                endFrame: controls?.endFrame,
-                trickNames,
-                boxes,
-                rotations,
-            }, undefined, "\t")}
-            </pre>
-        </div>}
+        { step == 4 && <StepFour 
+            videoId={video?.id}
+            startFrame={controls?.startFrame}
+            endFrame={controls?.endFrame}
+            boxes={boxes}
+            rotations={rotations}
+        />}
         <BottomBar 
             ready={ready}
             onNext={() => {
@@ -111,10 +111,15 @@ export function ClipCreator({videoId}: props) {
 }
 
 interface clipProgressProps {
+    ready: boolean
     step: number
+    onNext(): void
 }
-function ClipProgress({step}: clipProgressProps) {
+function ClipProgress({step, ready, onNext}: clipProgressProps) {
     const thresholdColor = (n: number) => {
+        if (ready && step == n - 1) {
+            return { backgroundColor: "#ebbd34" }
+        }
         if (step < n) {
             return { backgroundColor: "white" };
         }
@@ -123,7 +128,7 @@ function ClipProgress({step}: clipProgressProps) {
         }
         return { backgroundColor: "#d8d8d8" };
     }
-    return <div className="video-player-progress">
+    return <div className="video-player-progress" onClick={() => ready && onNext()}>
         <div className="video-player-step" style={thresholdColor(1)}> 
             <div className="video-player-step-title"> 1D </div>
             <div className="video-player-step-arrow" style={thresholdColor(2)} />
@@ -134,7 +139,7 @@ function ClipProgress({step}: clipProgressProps) {
         </div>
         <div className="video-player-step" style={thresholdColor(3)}> 
             <div className="video-player-step-title"> 3D </div>
-            <div className="video-player-step-arrow" style={thresholdColor(4)} />
+            <div className="video-player-step-arrow" style={thresholdColor(8)} />
         </div>
     </div>
 }
@@ -160,6 +165,49 @@ function StepThree() {
             <li> Scrolling the mouse wheel will tilt board like popping an ollie </li>
             <li> If you're on mobile, drawing circles is the same as scrolling the mouse wheel </li>
         </ul>
+    </div>
+}
+
+interface stepFourProps {
+    videoId?: string
+    startFrame?: number
+    endFrame?: number
+    boxes: { [frame: number]: Box }
+    rotations: { [frame: number]: Rotation }
+}
+function StepFour({videoId, startFrame, endFrame, boxes, rotations}: stepFourProps) {
+    let input = React.createRef<HTMLInputElement>()
+    let [ disabled, setDisabled ] = React.useState(false);
+    let [ error, setError ] = React.useState("")
+    let [ finished, setFinished ] = React.useState(false);
+    if (finished) {
+        return <Redirect to="/videos" />
+    }
+    return <div>
+        <h3> Name this Trick </h3>
+        <input type="text" ref={input} placeholder="kickflip"/>
+        <button disabled={disabled} onClick={() => {
+            if (!input.current?.value) {
+                return;
+            }
+            setDisabled(true);
+            addClip({
+                videoId,
+                trick: input.current.value,
+                startFrame,
+                endFrame,
+                boxes,
+                rotations,
+            })
+            .then(_ => {
+                setFinished(true);
+            })
+            .catch(err => {
+                setError(err);
+                setDisabled(false);
+            })
+        }}> Add Clip </button>
+        <div style={{color: "red"}}> {error} </div>
     </div>
 }
 

@@ -52,6 +52,7 @@ export function VideoPlayer({ video, width, height, step, onVideoLoaded, addRota
     }, [overlayCanvas.current, pendingControls, videoControls]);
 
     let [ boxes, setBoxes ] = React.useState<BoxFrame>();
+    let [ rotations, setRotations ] = React.useState<RotateBoard>();
     // synchronize step classes to the current step 
     React.useEffect(() => {
         const video = videoCanvas.current;
@@ -75,14 +76,21 @@ export function VideoPlayer({ video, width, height, step, onVideoLoaded, addRota
             break
         case 3:
             let step3 = new RotateBoard(overlay, controls, boxes as BoxFrame, addRotation);
+            setRotations(step3)
             cleanup = handleGestures(overlay, step3);
             renderID = controls.addRenderFunc(() => step3.render());
+            break
+        case 4:
+            renderID = controls.addRenderFunc(() => rotations?.render());
+            let interval = rotations?.animate();
+            cleanup = () => window.clearInterval(interval)
+            break
+
         }
 
         return () => {
             controls.removeRenderFunc(renderID);
             if (cleanup) {
-                console.log("Cleaning up");
                 cleanup();
             }
         }
