@@ -57,6 +57,9 @@ module.exports = env => {
       defaultToken = env.token;
       logURL = "http://" + ip.address() + ":8080";
     }
+    if (env.api) {
+      url = env.api;
+    }
   }
 
   writeConstants(url, logURL, defaultToken);
