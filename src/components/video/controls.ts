@@ -5,6 +5,7 @@ export type RenderFunc = () => void
 export interface VideoControls {
     readonly width: number
     readonly height: number
+    readonly canvasScale: number;
     readonly duration: number
     readonly fps: number
     readonly frame: number
@@ -50,13 +51,14 @@ class VideoController {
     private animationInterval: number = 0;
     private renderers: { [key: number]: RenderFunc } = {};
 
-    public fps: number = this.videoInfo.fps;
+    public fps = this.videoInfo.fps;
     public startFrame = 0;
     public endFrame = 0;
-    public width: number = 0;
-    public height: number = 0;
-    public duration: number = 0;
-    public playing: boolean = false
+    public width = 0;
+    public height = 0;
+    public playing = false
+    public duration = 0;
+    public canvasScale = 0;
 
     constructor(private videoInfo: Video) {
         let counter = document.createElement("canvas");
@@ -95,7 +97,7 @@ class VideoController {
         .then(() => {
             this.playing = true;
             this.width = this.video.videoWidth;
-            this.height = this.video.videoHeight - FRAME_COUNTER_HEIGHT;
+            this.height = this.video.videoHeight;
             this.duration = Math.floor(this.video.duration * this.videoInfo.fps);
             this.setTimeRange(0, this.duration);
             this.animationInterval = window.setInterval(() => {
@@ -116,7 +118,7 @@ class VideoController {
             canvas.width = window.devicePixelRatio * width;
             canvas.height = window.devicePixelRatio * width * this.videoInfo.height / this.videoInfo.width;
         }
-        console.log(canvas.height, canvas.width)
+        this.canvasScale = this.videoInfo.width / canvas.width;
         this.ctx = canvas.getContext("2d");
         if (!this.ctx) {
             throw new Error("Cannot set controls on the given canvas, no context");

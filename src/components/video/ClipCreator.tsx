@@ -94,8 +94,7 @@ export function ClipCreator({videoId}: props) {
         { step == 3 && <StepThree /> }
         { step == 4 && <StepFour 
             videoId={video?.id}
-            startFrame={controls?.startFrame}
-            endFrame={controls?.endFrame}
+            controls={controls as VideoControls}
             boxes={boxes}
             rotations={rotations}
         />}
@@ -170,12 +169,11 @@ function StepThree() {
 
 interface stepFourProps {
     videoId?: string
-    startFrame?: number
-    endFrame?: number
+    controls: VideoControls
     boxes: { [frame: number]: Box }
     rotations: { [frame: number]: Rotation }
 }
-function StepFour({videoId, startFrame, endFrame, boxes, rotations}: stepFourProps) {
+function StepFour({videoId, controls, boxes, rotations}: stepFourProps) {
     let input = React.createRef<HTMLInputElement>()
     let [ disabled, setDisabled ] = React.useState(false);
     let [ error, setError ] = React.useState("")
@@ -194,11 +192,11 @@ function StepFour({videoId, startFrame, endFrame, boxes, rotations}: stepFourPro
             addClip({
                 videoId,
                 trick: input.current.value,
-                startFrame,
-                endFrame,
+                startFrame: controls.startFrame,
+                endFrame: controls.endFrame,
                 boxes,
                 rotations,
-            })
+            }, controls.canvasScale)
             .then(_ => {
                 setFinished(true);
             })

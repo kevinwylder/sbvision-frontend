@@ -42,7 +42,17 @@ interface PartialClipData {
     rotations: { [ frame: number ]: [ number, number, number, number ] }
     trick: string
 }
-export function addClip(clip: PartialClipData): Promise<void> {
+export function addClip(clip: PartialClipData, canvasScale: number): Promise<void> {
+    Object.keys(clip.boxes).forEach((key) => {
+        let frame = key as unknown as number; // literally fuck off please
+        let { x, y, w, h } = clip.boxes[frame];
+        clip.boxes[frame] = {
+            x: Math.round(canvasScale * x),
+            y: Math.round(canvasScale * y),
+            w: Math.round(canvasScale * w),
+            h: Math.round(canvasScale * h),
+        }
+    });
     return getToken()
     .then(token => fetch(`${API_URL}/clip/upload`, {
         method: "POST",

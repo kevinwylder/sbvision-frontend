@@ -150,10 +150,10 @@ class GrabBox {
 
     public asStruct() {
         return {
-            x: Math.round(this.x),
-            y: Math.round(this.y),
-            w: Math.round(this.w),
-            h: Math.round(this.h)
+            x: this.x,
+            y: this.y,
+            w: this.w,
+            h: this.h
         }
     }
 
@@ -169,4 +169,5 @@ class GrabBox {
         ctx.lineWidth = boxWidth / 3;
         ctx.stroke();
     }
+
 }
